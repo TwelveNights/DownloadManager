@@ -14,7 +14,7 @@ public class DownloadWindow extends JFrame {
     private JButton start = new JButton("start");
     private JPanel starter = new JPanel(new BorderLayout());
     private JTextField http = new JTextField();
-    private JTextField directory = new JTextField("C:\\");
+    private DownloadDirectory directory = new DownloadDirectory();
     private JPanel fields = new JPanel(new BorderLayout());
     private JScrollPane table = new JScrollPane(new DownloadTable());
     private TextPrompt prompt = new TextPrompt("input the http string here...", http);
@@ -37,10 +37,11 @@ public class DownloadWindow extends JFrame {
         fields.add(directory, BorderLayout.CENTER);
 
         starter.add(fields, BorderLayout.NORTH);
-        starter.add(start, BorderLayout.CENTER);
+        starter.add(Box.createRigidArea((new Dimension(0, 3))), BorderLayout.CENTER);
+        starter.add(start, BorderLayout.SOUTH);
 
         p.add(starter);
-        p.add(Box.createRigidArea((new Dimension (0, 15))));
+        p.add(Box.createRigidArea((new Dimension(0, 15))));
         p.add(table);
 
         add(p);
