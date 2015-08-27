@@ -17,7 +17,7 @@ public class SimpleMission extends Mission {
 		this.path = path;
 	}
 
-	Thread t;
+	transient Thread t;
 
 	// Variables representing progress in byte
 	long current = 0;
@@ -26,6 +26,12 @@ public class SimpleMission extends Mission {
 	public void start() {
 		t = new Thread(new SimpleTask());
 		t.start();
+		this.inprogress = true;
+	}
+	
+	public void pause() {
+		t.interrupt();
+		this.inprogress = false;
 	}
 
 	private class SimpleTask implements Runnable {
@@ -60,15 +66,17 @@ public class SimpleMission extends Mission {
 				} catch (FileNotFoundException e) {
 					// TODO
 					e.printStackTrace();
-					System.out.println("Failed to create file");
+					System.out.println("Failed to create/access file");
 				} catch (IOException e) {
 					// TODO
 					e.printStackTrace();
+					System.out.println("Failed to establish connection");
 				}
 
 			} catch (IOException e) {
 				// TODO
 				e.printStackTrace();
+				System.out.println("Failed to establish connection");
 			}
 
 		}

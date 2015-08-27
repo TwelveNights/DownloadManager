@@ -13,5 +13,7 @@ public abstract class Mission implements Serializable {
 	boolean inprogress = false;
 	
 	public abstract void start();
+	
+	public abstract void pause();
 
 }
