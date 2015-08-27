@@ -1,7 +1,9 @@
 import javax.swing.JButton;
 import javax.swing.SwingConstants;
 import javax.swing.JFileChooser;
+import java.awt.Color;
 import java.awt.event.*;
+import java.awt.Font;
 
 public class DownloadDirectory extends JButton implements SwingConstants, ActionListener {
 
@@ -13,7 +15,7 @@ public class DownloadDirectory extends JButton implements SwingConstants, Action
         chooser = new JFileChooser();
         setHorizontalAlignment(SwingConstants.CENTER);
         addActionListener(this);
-        setContentAreaFilled(false);
+        setBackground(Color.LIGHT_GRAY);
 
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
     }
