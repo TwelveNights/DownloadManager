@@ -90,6 +90,8 @@ public class SimpleMission extends Mission {
 
 				try (InputStream in = conn.getInputStream();
 						FileOutputStream out = new FileOutputStream(path.toFile());) {
+					if (current != 0)
+						out.getChannel().position(current);
 
 					byte[] buf = new byte[64 * 1024];
 					int len;
