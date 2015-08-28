@@ -10,69 +10,117 @@ import java.nio.file.Path;
 
 public class SimpleMission extends Mission {
 
-    private static final long serialVersionUID = 5113449782029278939L;
+	private static final long serialVersionUID = 5113449782029278939L;
 
-    public SimpleMission(URL url, Path path) {
-        this.url = url;
-        this.path = path;
-    }
+	/**
+	 * Constructs a SimpleMission with the specified URL and Path.
+	 * 
+	 * @param url
+	 *            The URL from which this mission downloads a file.
+	 * @param path
+	 *            The Path to which the downloaded file is stored to. File name
+	 *            must be included.
+	 */
+	public SimpleMission(URL url, Path path) {
+		this.url = url;
+		this.path = path;
+	}
 
-    Thread t;
+	/**
+	 * The active thread (if any) dedicated for this download mission.
+	 */
+	transient Thread t;
 
-    // Variables representing progress in byte
-    long current = 0;
-    long total = -1;
+	/**
+	 * Download progress represented in number of bytes downloaded
+	 */
+	long current = 0;
+	long total = -1;
 
-    public void start() {
-        t = new Thread(new SimpleTask());
-        t.start();
-    }
+	/**
+	 * Starts the download mission by creating a new thread and activates it.
+	 */
+	public void start() {
+		this.inProgress = true;
+		t = new Thread(new SimpleTask());
+		t.start();
+	}
 
-    private class SimpleTask implements Runnable {
+	/**
+	 * Stops the active thread. Do nothing if no thread is active or said thread
+	 * is not initialized. Note that said thread is not immediately stopped.
+	 * inProgress() or join() must be called to ensure that said thread is
+	 * safely stopped.
+	 */
+	public void pause() {
+		if (this.inProgress && t != null)
+			t.interrupt();
+	}
 
-        @Override
-        public void run() {
+	/**
+	 * Wait for the active thread (if any) to die.
+	 * 
+	 * @throws InterruptedException
+	 *             if any thread has interrupted the current thread. The
+	 *             interrupted status of the current thread is cleared when this
+	 *             exception is thrown.
+	 */
+	public void join() throws InterruptedException {
+		if (this.inProgress && t != null)
+			t.join();
+	}
 
-            try {
-                URLConnection conn = url.openConnection();
-                if (total == -1) {
-                    total = conn.getContentLengthLong();
-                } else {
-                    conn.setRequestProperty("Range", "Bytes=" + current + "-");
-                }
+	private class SimpleTask implements Runnable {
 
-                if (Thread.interrupted())
-                    return;
+		@Override
+		public void run() {
 
-                try (InputStream in = conn.getInputStream();
-                     FileOutputStream out = new FileOutputStream(path.toFile());) {
+			try {
+				URLConnection conn = url.openConnection();
+				if (total == -1) {
+					total = conn.getContentLengthLong();
+				} else {
+					// TODO casing by protocol
+					conn.setRequestProperty("Range", "Bytes=" + current + "-");
+				}
 
-                    byte[] buf = new byte[64 * 1024];
-                    int len;
+				if (Thread.interrupted()) {
+					return;
+				}
 
-                    while ((len = in.read(buf)) != -1) {
-                        out.write(buf, 0, len);
-                        total += len;
-                        if (Thread.interrupted())
-                            return;
-                    }
+				try (InputStream in = conn.getInputStream();
+						FileOutputStream out = new FileOutputStream(path.toFile());) {
 
-                } catch (FileNotFoundException e) {
-                    // TODO
-                    e.printStackTrace();
-                    System.out.println("Failed to create file");
-                } catch (IOException e) {
-                    // TODO
-                    e.printStackTrace();
-                }
+					byte[] buf = new byte[64 * 1024];
+					int len;
 
-            } catch (IOException e) {
-                // TODO
-                e.printStackTrace();
-            }
+					while ((len = in.read(buf)) != -1) {
+						out.write(buf, 0, len);
+						current += len;
+						if (Thread.interrupted()) {
+							return;
+						}
+					}
 
-        }
+				} catch (FileNotFoundException e) {
+					// TODO
+					e.printStackTrace();
+					System.out.println("Failed to create/access file");
+				} catch (IOException e) {
+					// TODO
+					e.printStackTrace();
+					System.out.println("Failed to establish connection");
+				}
 
-    }
+			} catch (IOException e) {
+				// TODO
+				e.printStackTrace();
+				System.out.println("Failed to establish connection");
+			} finally {
+				inProgress = false;
+			}
 
+		}
+
+	}
 }
