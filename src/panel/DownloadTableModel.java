@@ -2,6 +2,7 @@ package panel;
 
 import javax.swing.table.DefaultTableModel;
 
+
 public class DownloadTableModel extends DefaultTableModel {
     public DownloadTableModel() {
         super(0, 3);
