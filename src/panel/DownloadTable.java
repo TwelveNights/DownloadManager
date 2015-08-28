@@ -25,7 +25,7 @@ public class DownloadTable extends JTable {
         return value == null ? null : value.toString();
     }
 
-    public DownloadTableModel getDownloadTableModel() {
-        return model;
-    }
+    public void insertRow(int row, Object[] stuff) {
+        model.insertRow(row, stuff);
+        }
 }

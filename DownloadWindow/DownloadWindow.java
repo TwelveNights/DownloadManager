@@ -1,10 +1,22 @@
+<<<<<<< HEAD
+<<<<<<< HEAD
 import javax.swing.*;
+=======
+>>>>>>> cc84d92... add table methods to DownloadTable, lambda replaces anonymous function in DownloadWindow
+=======
+>>>>>>> 17cf1c2... fix unused imports
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+<<<<<<< HEAD
+<<<<<<< HEAD
 import javax.swing.JLabel;
+=======
+>>>>>>> cc84d92... add table methods to DownloadTable, lambda replaces anonymous function in DownloadWindow
+=======
+>>>>>>> 17cf1c2... fix unused imports
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;

@@ -1,9 +1,11 @@
 package panel;
 
-import javax.swing.*;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import javax.swing.JButton;
+import javax.swing.SwingConstants;
+import javax.swing.JFileChooser;
+import java.awt.Color;
 
 public class DownloadDirectory extends JButton implements SwingConstants, ActionListener {
 
