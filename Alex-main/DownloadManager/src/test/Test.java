@@ -1,10 +1,7 @@
-package test;
-
+import task.SimpleMission;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Paths;
-
-import task.SimpleMission;
 
 public class Test {
 

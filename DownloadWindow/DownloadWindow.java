@@ -1,23 +1,41 @@
+<<<<<<< HEAD
+<<<<<<< HEAD
+import javax.swing.*;
+=======
+>>>>>>> cc84d92... add table methods to DownloadTable, lambda replaces anonymous function in DownloadWindow
+=======
+>>>>>>> 17cf1c2... fix unused imports
+import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
-import java.awt.BorderLayout;
-import javax.swing.JPanel;
 import javax.swing.JButton;
+import javax.swing.JFrame;
+<<<<<<< HEAD
+<<<<<<< HEAD
+import javax.swing.JLabel;
+=======
+>>>>>>> cc84d92... add table methods to DownloadTable, lambda replaces anonymous function in DownloadWindow
+=======
+>>>>>>> 17cf1c2... fix unused imports
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.JFrame;
+import java.awt.BorderLayout;
 import java.awt.Dimension;
-import javax.swing.Box;
 
 public class DownloadWindow extends JFrame {
 
     private JPanel p = new JPanel();
-    private JButton start = new JButton("start");
-    private JPanel starter = new JPanel(new BorderLayout());
+
     private JTextField http = new JTextField();
-    private DownloadDirectory directory = new DownloadDirectory();
-    private JPanel fields = new JPanel(new BorderLayout());
-    private JScrollPane table = new JScrollPane(new DownloadTable());
     private TextPrompt prompt = new TextPrompt("input the http string here...", http);
+    private DownloadDirectory directory = new DownloadDirectory();
+
+    private JPanel starter = new JPanel(new BorderLayout());
+    private JPanel fields = new JPanel(new BorderLayout());
+    private JButton start = new JButton("start");
+
+    private JScrollPane table = new JScrollPane(new DownloadTable());
 
     public static void main(String[] args) {
         new DownloadWindow();
@@ -40,8 +58,12 @@ public class DownloadWindow extends JFrame {
         starter.add(Box.createRigidArea((new Dimension(0, 3))), BorderLayout.CENTER);
         starter.add(start, BorderLayout.SOUTH);
 
+        starter.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                BorderFactory.createTitledBorder("Download Setup"),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)
+        ));
+
         p.add(starter);
-        p.add(Box.createRigidArea((new Dimension(0, 15))));
         p.add(table);
 
         add(p);

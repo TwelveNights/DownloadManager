@@ -1,3 +1,5 @@
+package panel;
+
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -7,7 +9,7 @@ import javax.swing.text.*;
 
 /**
  * https://tips4java.wordpress.com/2009/11/29/text-prompt/
- * The TextPrompt class will display a prompt over top of a text component when
+ * The panel.TextPrompt class will display a prompt over top of a text component when
  * the Document of the text field is empty. The Show property is used to
  * determine the visibility of the prompt.
  * <p>
@@ -20,7 +22,7 @@ public class TextPrompt extends JLabel
     public enum Show {
         ALWAYS,
         FOCUS_GAINED,
-        FOCUS_LOST;
+        FOCUS_LOST
     }
 
     private JTextComponent component;
