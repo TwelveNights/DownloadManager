@@ -1,6 +1,7 @@
 package panel;
 
 import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
 import java.awt.event.MouseEvent;
 
 public class DownloadTable extends JTable {
@@ -14,6 +15,8 @@ public class DownloadTable extends JTable {
         setAutoCreateRowSorter(true);
         getTableHeader().setReorderingAllowed(false);
         getTableHeader().setResizingAllowed(false);
+        setCellSelectionEnabled(true);
+        setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
     }
 
     @Override
