@@ -34,8 +34,9 @@ public class SimpleMission extends Mission {
 	/**
 	 * Download progress represented in number of bytes downloaded
 	 */
-	long current = 0;
-	long total = -1;
+	// TODO set public for test purpose
+	public long current = 0;
+	public long total = -1;
 
 	/**
 	 * Starts the download mission by creating a new thread and activates it.
@@ -77,23 +78,15 @@ public class SimpleMission extends Mission {
 
 			try {
 				URLConnection conn = url.openConnection();
-				if (total == -1) {
-					total = conn.getContentLengthLong();
-				} else {
-					// TODO casing by protocol
+				if (current != 0)
 					conn.setRequestProperty("Range", "Bytes=" + current + "-");
-				}
-
-				if (Thread.interrupted()) {
-					return;
-				}
 
 				try (InputStream in = conn.getInputStream();
-						FileOutputStream out = new FileOutputStream(path.toFile());) {
-					if (current != 0)
-						out.getChannel().position(current);
+						FileOutputStream out = new FileOutputStream(path.toFile(), current != 0);) {
+					if (total == -1)
+						total = conn.getContentLengthLong();
 
-					byte[] buf = new byte[64 * 1024];
+					byte[] buf = new byte[8 * 1024];
 					int len;
 
 					while ((len = in.read(buf)) != -1) {
@@ -125,5 +118,4 @@ public class SimpleMission extends Mission {
 		}
 
 	}
-
 }
