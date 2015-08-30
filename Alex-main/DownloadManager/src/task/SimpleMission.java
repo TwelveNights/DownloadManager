@@ -8,8 +8,10 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Path;
 
-import task.Progress.Status;
-
+/**
+ * SimpleMission is a class representing a download mission utilizing one Thread
+ * to obtain data from an http server and then writes it down to a given file.
+ */
 public class SimpleMission extends Mission {
 
 	private static final long serialVersionUID = 5113449782029278939L;
@@ -26,21 +28,21 @@ public class SimpleMission extends Mission {
 	public SimpleMission(URL url, Path path) {
 		this.url = url;
 		this.path = path;
-		this.progress = new SimpleProgress();
 	}
+
+	long current = 0;
+	long total = -1;
 
 	/**
 	 * The active thread (if any) dedicated for this download mission.
 	 */
 	transient Thread t;
 
-	SimpleProgress progress;
-
 	/**
 	 * Starts the download mission by creating a new thread and activates it.
 	 */
 	public void start() {
-		progress.status = Status.IN_PROGRESS;
+		status = Status.IN_PROGRESS;
 		t = new Thread(new SimpleTask());
 		t.start();
 	}
@@ -52,7 +54,7 @@ public class SimpleMission extends Mission {
 	 * safely stopped.
 	 */
 	public void pause() {
-		if (progress.status == Status.IN_PROGRESS && t != null)
+		if (status == Status.IN_PROGRESS && t != null)
 			t.interrupt();
 	}
 
@@ -65,12 +67,18 @@ public class SimpleMission extends Mission {
 	 *             exception is thrown.
 	 */
 	public void join() throws InterruptedException {
-		if (progress.status == Status.IN_PROGRESS && t != null)
+		if (status == Status.IN_PROGRESS && t != null)
 			t.join();
 	}
 
-	public SimpleProgress getProgress() {
-		return progress;
+	@Override
+	public long getTotalSize() {
+		return total;
+	}
+
+	@Override
+	public long getCurrentSize() {
+		return current;
 	}
 
 	private class SimpleTask implements Runnable {
@@ -81,52 +89,40 @@ public class SimpleMission extends Mission {
 			try {
 				URLConnection conn = url.openConnection();
 
-				if (progress.current != 0)
-					conn.setRequestProperty("Range", "Bytes=" + progress.current + "-");
+				if (current != 0)
+					conn.setRequestProperty("Range", "Bytes=" + current + "-");
 
 				try (InputStream in = conn.getInputStream();
-						FileOutputStream out = new FileOutputStream(path.toFile(), progress.current != 0);) {
-					if (progress.total == -1)
-						progress.total = conn.getContentLengthLong() + progress.current;
+						FileOutputStream out = new FileOutputStream(path.toFile(), current != 0);) {
+					if (total == -1)
+						total = conn.getContentLengthLong() + current;
 
 					byte[] buf = new byte[8 * 1024];
 					int len;
 
 					while ((len = in.read(buf)) != -1) {
 						out.write(buf, 0, len);
-						progress.current += len;
+						current += len;
 						if (Thread.interrupted()) {
-							progress.status = Status.PAUSED;
+							status = Status.PAUSED;
 							return;
 						}
 					}
 
-					progress.status = Status.FINISHED;
+					status = Status.FINISHED;
 
 				} catch (FileNotFoundException e) {
-					progress.status = Status.FAILED;
+					status = Status.FAILED;
 				} catch (IOException e) {
-					progress.status = Status.FAILED;
+					status = Status.FAILED;
 				}
 
 			} catch (IOException e) {
-				progress.status = Status.FAILED;
+				status = Status.FAILED;
 			}
 
 		}
 
 	}
 
-	private class SimpleProgress extends Progress {
-
-		private static final long serialVersionUID = 9142711264221651021L;
-
-		long current = 0;
-
-		@Override
-		public long getCurrentSize() {
-			return current;
-		}
-
-	}
 }

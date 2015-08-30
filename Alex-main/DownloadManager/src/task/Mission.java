@@ -4,8 +4,6 @@ import java.io.Serializable;
 import java.net.URL;
 import java.nio.file.Path;
 
-import task.Progress.Status;
-
 /**
  * Mission is the abstract base class for all download missions that involve
  * creating one or more threads in the process.
@@ -24,6 +22,8 @@ public abstract class Mission implements Serializable {
 	 */
 	Path path;
 
+	Status status = Status.NOT_STARTED;
+
 	/**
 	 * Starts the download mission.
 	 */
@@ -31,7 +31,7 @@ public abstract class Mission implements Serializable {
 
 	/**
 	 * Stops the active thread(s). Note that said thread is not immediately
-	 * stopped. inProgress() or join() must be called to ensure that said thread
+	 * stopped. getStatus() or join() must be called to ensure that said thread
 	 * is safely stopped.
 	 */
 	public abstract void pause();
@@ -46,24 +46,22 @@ public abstract class Mission implements Serializable {
 	 */
 	public abstract void join() throws InterruptedException;
 
-	public abstract Progress getProgress();
-
 	/**
 	 * @return the full size of the file to be downloaded.
 	 */
-	public long getTotalSize() {
-		return getProgress().getTotalSize();
-	}
+	abstract public long getTotalSize();
 
 	/**
 	 * @return the size of part of the file downloaded.
 	 */
-	public long getCurrentSize() {
-		return getProgress().getCurrentSize();
-	}
+	abstract public long getCurrentSize();
 
+	/**
+	 * @return current status of the mission.
+	 * @see Status
+	 */
 	public Status getStatus() {
-		return getProgress().status;
+		return status;
 	}
 
 }
