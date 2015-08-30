@@ -1,7 +1,7 @@
 package panel;
 
 import javax.swing.*;
-import java.awt.BorderLayout;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -14,7 +14,6 @@ import java.nio.file.Paths;
 import downloadexception.ExtensionException;
 import task.SimpleMission;
 import java.net.URLDecoder;
-import java.security.cert.Extension;
 
 import org.apache.commons.io.FilenameUtils;
 
@@ -22,14 +21,21 @@ public class DownloadWindow extends JFrame {
 
     private JPanel p = new JPanel();
 
+    private MissionManager manager = MissionManager.getInstance();
+
     private JTextField http = new JTextField();
     private DownloadDirectory directory = new DownloadDirectory();
+    private GridLayout controlLayout = new GridLayout(2, 2);
+    private JPanel controlPanel = new JPanel(controlLayout);
     private JButton start = new JButton("start");
+    private JButton pause = new JButton("pause");
+    private JButton stop = new JButton("stop");
+    private JButton clear = new JButton("clear");
 
     private BorderLayout startLayout = new BorderLayout();
     private BorderLayout fieldsLayout = new BorderLayout();
 
-    private JPanel starter = new JPanel(startLayout);
+    private JPanel inputFrame = new JPanel(startLayout);
     private JPanel fields = new JPanel(fieldsLayout);
 
     private DownloadTable table = new DownloadTable(new DownloadTableModel());
@@ -46,9 +52,10 @@ public class DownloadWindow extends JFrame {
 
         startLayout.setHgap(5);
         fieldsLayout.setVgap(3);
+        controlLayout.setHgap(2);
+        controlLayout.setVgap(2);
 
         p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
-        start.addActionListener((ActionEvent a) -> startDownload());
 
         setSize(500, 350);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -60,14 +67,27 @@ public class DownloadWindow extends JFrame {
         fields.add(http, BorderLayout.NORTH);
         fields.add(directory, BorderLayout.CENTER);
 
-        starter.add(fields, BorderLayout.CENTER);
-        starter.add(start, BorderLayout.EAST);
+        start.addActionListener((ActionEvent a) -> startDownload());
+        // pause.addActionListener((ActionEvent e) -> selectedMission.pause());
+        // stop.addActionListener((ActionEvent e) -> selectedMission.stop());
+        // clear.addActionListener((ActionEvent e) -> {
+        //    DownloadWindow window = (DownloadWindow) this.getParent();
+        //    window.getManager().removeMission(selectedMission);
+        // });
 
-        starter.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+        controlPanel.add(start);
+        controlPanel.add(pause);
+        controlPanel.add(stop);
+        controlPanel.add(clear);
+
+        inputFrame.add(fields, BorderLayout.CENTER);
+        inputFrame.add(controlPanel, BorderLayout.EAST);
+
+        inputFrame.setBorder(javax.swing.BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder("Download Setup"),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)));
 
-        p.add(starter);
+        p.add(inputFrame);
         p.add(scrollPane);
         p.add(warning);
 
@@ -96,10 +116,11 @@ public class DownloadWindow extends JFrame {
             String fileName = "\\" + FilenameUtils.getBaseName(url.getFile()) + "." + FilenameUtils.getExtension(url.getFile());
             path = Paths.get(directory.getDirectory() + URLDecoder.decode(fileName, "UTF-8"));
             SimpleMission mission = new SimpleMission(url, path);
+            manager.addMission(mission);
             mission.start();
             setWarningText(" ");
             Object[] row = {path.toAbsolutePath(), link, "Todo"};
-            updateTable(row);
+            table.insertRow(0, row);;
 
         } catch (MalformedURLException e) {
             setWarningText("Please enter a properly formatted URL for the file.");
@@ -110,7 +131,7 @@ public class DownloadWindow extends JFrame {
         }
     }
 
-    private void updateTable(Object[] row) {
-        table.insertRow(0, row);
+    public MissionManager getManager() {
+        return manager;
     }
 }

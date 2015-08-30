@@ -14,7 +14,7 @@ public class DownloadTable extends JTable {
         showHorizontalLines = false;
         setAutoCreateRowSorter(true);
         getTableHeader().setReorderingAllowed(false);
-        getTableHeader().setResizingAllowed(false);
+        // getTableHeader().setResizingAllowed(false);
         setCellSelectionEnabled(true);
         setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
     }
@@ -31,4 +31,7 @@ public class DownloadTable extends JTable {
     public void insertRow(int row, Object[] stuff) {
         model.insertRow(row, stuff);
         }
+    public void removeRow(int row) {
+        model.removeRow(row);
+    }
 }
