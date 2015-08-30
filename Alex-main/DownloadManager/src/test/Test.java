@@ -1,7 +1,6 @@
 package test;
 
-import task.Progress.Status;
-import task.SimpleMission;
+import task.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
