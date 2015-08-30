@@ -124,5 +124,4 @@ public class SimpleMission extends Mission {
 		}
 
 	}
-
 }
