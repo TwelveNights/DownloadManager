@@ -8,6 +8,10 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Path;
 
+/**
+ * SimpleMission is a class representing a download mission utilizing one Thread
+ * to obtain data from an http server and then writes it down to a given file.
+ */
 public class SimpleMission extends Mission {
 
 	private static final long serialVersionUID = 5113449782029278939L;
@@ -26,22 +30,19 @@ public class SimpleMission extends Mission {
 		this.path = path;
 	}
 
+	long current = 0;
+	long total = -1;
+
 	/**
 	 * The active thread (if any) dedicated for this download mission.
 	 */
 	transient Thread t;
 
 	/**
-	 * Download progress represented in number of bytes downloaded
-	 */
-	long current = 0;
-	long total = -1;
-
-	/**
 	 * Starts the download mission by creating a new thread and activates it.
 	 */
 	public void start() {
-		this.inProgress = true;
+		status = Status.IN_PROGRESS;
 		t = new Thread(new SimpleTask());
 		t.start();
 	}
@@ -53,7 +54,7 @@ public class SimpleMission extends Mission {
 	 * safely stopped.
 	 */
 	public void pause() {
-		if (this.inProgress && t != null)
+		if (status == Status.IN_PROGRESS && t != null)
 			t.interrupt();
 	}
 
@@ -66,8 +67,18 @@ public class SimpleMission extends Mission {
 	 *             exception is thrown.
 	 */
 	public void join() throws InterruptedException {
-		if (this.inProgress && t != null)
+		if (status == Status.IN_PROGRESS && t != null)
 			t.join();
+	}
+
+	@Override
+	public long getTotalSize() {
+		return total;
+	}
+
+	@Override
+	public long getCurrentSize() {
+		return current;
 	}
 
 	private class SimpleTask implements Runnable {
@@ -77,47 +88,37 @@ public class SimpleMission extends Mission {
 
 			try {
 				URLConnection conn = url.openConnection();
-				if (total == -1) {
-					total = conn.getContentLengthLong();
-				} else {
-					// TODO casing by protocol
-					conn.setRequestProperty("Range", "Bytes=" + current + "-");
-				}
 
-				if (Thread.interrupted()) {
-					return;
-				}
+				if (current != 0)
+					conn.setRequestProperty("Range", "Bytes=" + current + "-");
 
 				try (InputStream in = conn.getInputStream();
-						FileOutputStream out = new FileOutputStream(path.toFile());) {
+						FileOutputStream out = new FileOutputStream(path.toFile(), current != 0);) {
+					if (total == -1)
+						total = conn.getContentLengthLong() + current;
 
-					byte[] buf = new byte[64 * 1024];
+					byte[] buf = new byte[8 * 1024];
 					int len;
 
 					while ((len = in.read(buf)) != -1) {
 						out.write(buf, 0, len);
 						current += len;
 						if (Thread.interrupted()) {
+							status = Status.PAUSED;
 							return;
 						}
 					}
 
+					status = Status.FINISHED;
+
 				} catch (FileNotFoundException e) {
-					// TODO
-					e.printStackTrace();
-					System.out.println("Failed to create/access file");
+					status = Status.FAILED;
 				} catch (IOException e) {
-					// TODO
-					e.printStackTrace();
-					System.out.println("Failed to establish connection");
+					status = Status.FAILED;
 				}
 
 			} catch (IOException e) {
-				// TODO
-				e.printStackTrace();
-				System.out.println("Failed to establish connection");
-			} finally {
-				inProgress = false;
+				status = Status.FAILED;
 			}
 
 		}
