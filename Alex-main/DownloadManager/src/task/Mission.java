@@ -21,12 +21,8 @@ public abstract class Mission implements Serializable {
 	 * included.
 	 */
 	Path path;
-	/**
-	 * Whether there is an active download thread. Implementation must
-	 * guarantees that inProgress is false if and only if there is no active
-	 * thread running.
-	 */
-	boolean inProgress = false;
+
+	Status status = Status.NOT_STARTED;
 
 	/**
 	 * Starts the download mission.
@@ -35,7 +31,7 @@ public abstract class Mission implements Serializable {
 
 	/**
 	 * Stops the active thread(s). Note that said thread is not immediately
-	 * stopped. inProgress() or join() must be called to ensure that said thread
+	 * stopped. getStatus() or join() must be called to ensure that said thread
 	 * is safely stopped.
 	 */
 	public abstract void pause();
@@ -51,10 +47,21 @@ public abstract class Mission implements Serializable {
 	public abstract void join() throws InterruptedException;
 
 	/**
-	 * @return whether there is an active download thread.
+	 * @return the full size of the file to be downloaded.
 	 */
-	public boolean inProgress() {
-		return inProgress;
+	abstract public long getTotalSize();
+
+	/**
+	 * @return the size of part of the file downloaded.
+	 */
+	abstract public long getCurrentSize();
+
+	/**
+	 * @return current status of the mission.
+	 * @see Status
+	 */
+	public Status getStatus() {
+		return status;
 	}
 
 }
