@@ -222,7 +222,7 @@ public class MultithreadMission extends Mission {
 	public void join() throws InterruptedException {
 		synchronized (threads) {
 			if (status == Status.IN_PROGRESS)
-				threads.notify();
+				threads.wait();
 		}
 	}
 
