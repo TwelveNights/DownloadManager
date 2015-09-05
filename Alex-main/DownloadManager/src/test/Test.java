@@ -11,9 +11,9 @@ public class Test {
 	public static void main(String[] args) {
 		/*
 		try {
-			URL url = new URL("http://media.soundcloud.com/stream/m84jLCWdKDgA.mp3");
-			Path path = Paths.get("C:\\Users\\Dafang\\Downloads\\m84jLCWdKDgA.mp3");
-			SimpleMission m = new SimpleMission(url, path);
+			URL url = new URL("https://docs.oracle.com/javase/tutorial/collections/interfaces/examples/dictionary.txt");
+			Path path = Paths.get("C:\\Users\\Dafang\\Downloads\\dictionary.txt");
+			Mission m = new MultithreadMission(url, path);
 			m.start();
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
@@ -21,12 +21,12 @@ public class Test {
 		*/
 		
 		try {
-			URL url = new URL("http://seaside-c.jp/program/suzakinishi/net_radio/suzakinishi_112.wma");
-			Path path = Paths.get("C:\\Users\\Dafang\\Downloads\\suzakinishi_112.wma");
-			SimpleMission m = new SimpleMission(url, path);
+			URL url = new URL("http://abeautifulwww.com/NewWikipediaActivityVisualizations_AB91/07WikipediaPS3150DPI.png");
+			Path path = Paths.get("C:\\Users\\Dafang\\Downloads\\07WikipediaPS3150DPI.png");
+			Mission m = new MultithreadMission(url, path);
 			m.start();
 
-			long i = 1000000;
+			long i = 5000000;
 
 			while (m.getStatus() == Status.IN_PROGRESS) {
 
@@ -37,7 +37,7 @@ public class Test {
 					System.out.println("File size : " + path.toFile().length());
 					System.out.println("Mission current progress : " + m.getCurrentSize());
 					System.out.println("Mission total bytes : " + m.getTotalSize());
-					i += 1000000;
+					i += 5000000;
 					m.start();
 				}
 				Thread.yield();
@@ -53,6 +53,7 @@ public class Test {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+		
 		
 	}
 }
