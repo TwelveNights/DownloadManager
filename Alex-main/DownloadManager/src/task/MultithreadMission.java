@@ -150,7 +150,9 @@ public class MultithreadMission extends Mission {
 		}
 
 		// Start up threads
-		threads = new ArrayList<Thread>();
+		if (threads == null)
+			threads = new ArrayList<Thread>();
+		
 		populateThreads();
 	}
 
@@ -199,11 +201,8 @@ public class MultithreadMission extends Mission {
 		}
 
 		// Populate threads
-		if (threads.size() < THREAD_NUMBER && !todo.isEmpty() && !interrupted) {
-			do {
-				startThread();
-			} while (threads.size() < THREAD_NUMBER && !todo.isEmpty() && !interrupted);
-		}
+		while (threads.size() < THREAD_NUMBER && !todo.isEmpty() && !interrupted)
+			startThread();
 	}
 
 	/**
