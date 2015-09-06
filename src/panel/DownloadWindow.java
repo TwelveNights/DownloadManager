@@ -20,7 +20,6 @@ import task.Status;
 public class DownloadWindow extends JFrame {
 
     private JPanel p = new JPanel();
-    private Object[] COLUMN_NAMES = {"Path", "Link", "Progress"};
 
     private MissionManager manager;
     private SimpleMission selectedMission = null;
