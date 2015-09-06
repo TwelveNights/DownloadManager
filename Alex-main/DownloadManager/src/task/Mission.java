@@ -86,4 +86,32 @@ public abstract class Mission implements Serializable {
 	public final Status getStatus() {
 		return status;
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((file == null) ? 0 : file.hashCode());
+		result = prime * result + ((url == null) ? 0 : url.hashCode());
+		return result;
+	}
+
+	/**
+	 * Comparison uses equals() method of File and URL.
+	 * 
+	 * @see File#equals(Object)
+	 * @see URL#equals(Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj instanceof Mission) {
+			Mission other = (Mission) obj;
+			return ((file == null) ? (other.file == null) : file.equals(other.file))
+					&& ((url == null) ? (other.url == null) : url.equals(other.url));
+		}
+		return false;
+	}
+
 }
