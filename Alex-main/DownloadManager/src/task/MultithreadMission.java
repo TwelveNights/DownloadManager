@@ -120,11 +120,11 @@ public class MultithreadMission extends Mission {
 		}
 
 		/*
-		 * Field member current can only be initialized after the creation of
-		 * the file. This allows multiple attempts of file creation should the
-		 * first attempt fail.
+		 * This block allows multiple attempts of file creation should the first
+		 * attempt fail. Checks file size and start over if there is a mismatch.
+		 * Note that file identity other than its size is not verified.
 		 */
-		if (progress == null) {
+		if (!file.exists() || file.length() != total) {
 			try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
 				raf.setLength(total);
 			} catch (FileNotFoundException e) {
@@ -135,8 +135,14 @@ public class MultithreadMission extends Mission {
 				e.printStackTrace();
 				status = Status.FAILED;
 				return;
+			} finally {
+				progress = null;
+				todo = null;
+				current = 0;
 			}
+		}
 
+		if (progress == null) {
 			// Calculate the number of sections needed and initialize the
 			// progress table.
 			// Type-cast fails if file is too big.
