@@ -3,6 +3,8 @@ package panel;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import java.awt.event.MouseEvent;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 public class DownloadTable extends JTable {
 
@@ -28,10 +30,14 @@ public class DownloadTable extends JTable {
         return value == null ? null : value.toString();
     }
 
-    public void insertRow(int row, Object[] stuff) {
-        model.insertRow(row, stuff);
+    public URL getRowURL(int row) {
+        try {
+            return new URL(model.getValueAt(row, 1).toString());
         }
-    public void removeRow(int row) {
-        model.removeRow(row);
+        catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }

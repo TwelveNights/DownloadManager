@@ -10,7 +10,7 @@ import java.awt.Color;
 public class DownloadDirectory extends JButton implements SwingConstants, ActionListener {
 
     private JFileChooser chooser;
-    private String directory = "C:\\";
+    private String directory = System.getProperty("user.dir").toString();
 
     public DownloadDirectory() {
         super("...");

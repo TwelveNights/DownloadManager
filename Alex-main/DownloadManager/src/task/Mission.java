@@ -1,5 +1,6 @@
 package task;
 
+import java.io.File;
 import java.io.Serializable;
 import java.net.URL;
 import java.nio.file.Path;
@@ -17,11 +18,13 @@ public abstract class Mission implements Serializable {
 	 */
 	URL url;
 	/**
-	 * The Path to which the downloaded file is stored to. File name must be
-	 * included.
+	 * The File where downloaded data is stored.
 	 */
-	Path path;
+	File file;
 
+	/**
+	 * The status of this mission.
+	 */
 	Status status = Status.NOT_STARTED;
 
 	/**
@@ -47,6 +50,27 @@ public abstract class Mission implements Serializable {
 	public abstract void join() throws InterruptedException;
 
 	/**
+	 * @return The URL from which this mission downloads a file.
+	 */
+	public URL getUrl() {
+		return url;
+	}
+
+	/**
+	 * @return The File where downloaded data is stored.
+	 */
+	public File getFile() {
+		return file;
+	}
+
+	/**
+	 * @return The path of the downloaded file.
+	 */
+	public Path getPath() {
+		return file.toPath();
+	}
+
+	/**
 	 * @return the full size of the file to be downloaded.
 	 */
 	abstract public long getTotalSize();
@@ -58,10 +82,36 @@ public abstract class Mission implements Serializable {
 
 	/**
 	 * @return current status of the mission.
-	 * @see Status
 	 */
-	public Status getStatus() {
+	public final Status getStatus() {
 		return status;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((file == null) ? 0 : file.hashCode());
+		result = prime * result + ((url == null) ? 0 : url.hashCode());
+		return result;
+	}
+
+	/**
+	 * Comparison uses equals() method of File and URL.
+	 * 
+	 * @see File#equals(Object)
+	 * @see URL#equals(Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj instanceof Mission) {
+			Mission other = (Mission) obj;
+			return ((file == null) ? (other.file == null) : file.equals(other.file))
+					&& ((url == null) ? (other.url == null) : url.equals(other.url));
+		}
+		return false;
 	}
 
 }
