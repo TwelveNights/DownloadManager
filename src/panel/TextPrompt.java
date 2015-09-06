@@ -1,3 +1,5 @@
+package panel;
+
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -20,7 +22,7 @@ public class TextPrompt extends JLabel
     public enum Show {
         ALWAYS,
         FOCUS_GAINED,
-        FOCUS_LOST;
+        FOCUS_LOST
     }
 
     private JTextComponent component;

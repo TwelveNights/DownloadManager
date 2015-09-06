@@ -1,10 +1,13 @@
+package panel;
+
 import javax.swing.table.DefaultTableModel;
-import javax.swing.JCheckBox;
+
 
 public class DownloadTableModel extends DefaultTableModel {
+
     public DownloadTableModel() {
-        super(15, 4);
-        String[] colNames = {"Path", "Progress", "Total", "Complete"};
+        super(0, 3);
+        String[] colNames = {"Directory", "URL", "Status"};
         setColumnIdentifiers(colNames);
     }
 
@@ -12,4 +15,5 @@ public class DownloadTableModel extends DefaultTableModel {
     public boolean isCellEditable(int row, int column) {
         return false;
     }
+
 }

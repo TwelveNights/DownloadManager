@@ -1,19 +1,26 @@
+package panel;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.SwingConstants;
 import javax.swing.JFileChooser;
-import java.awt.event.*;
+import java.awt.Color;
 
 public class DownloadDirectory extends JButton implements SwingConstants, ActionListener {
 
     private JFileChooser chooser;
-    private String directory = "C:\\";
+    private String directory = System.getProperty("user.dir").toString();
 
     public DownloadDirectory() {
         super("...");
         chooser = new JFileChooser();
         setHorizontalAlignment(SwingConstants.CENTER);
         addActionListener(this);
+        setOpaque(false);
         setContentAreaFilled(false);
+        setBorderPainted(false);
+        // setBackground(Color.LIGHT_GRAY);
 
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
     }
