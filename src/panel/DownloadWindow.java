@@ -81,7 +81,7 @@ public class DownloadWindow extends JFrame {
 
         p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
 
-        setSize(500, 350);
+        setSize(800, 600);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(false);
@@ -101,6 +101,7 @@ public class DownloadWindow extends JFrame {
 
         fields.add(http, BorderLayout.NORTH);
         fields.add(directory, BorderLayout.CENTER);
+        fields.add(warning, BorderLayout.SOUTH);
 
         start.addActionListener((ActionEvent a) -> startDownload());
 
@@ -150,14 +151,14 @@ public class DownloadWindow extends JFrame {
         });
         clear.addActionListener((ActionEvent e) -> {
             selectMission();
-            if (selectedMission.getStatus().equals(Status.FINISHED)) {
-                if (selectedMission != null) {
+            if (selectedMission != null) {
+                if (selectedMission.getStatus().equals(Status.FINISHED)) {
                     manager.removeMission(table.getSelectedRow(), selectedMission);
                     selectedMission = null;
-                } else setWarningText("Please select a download.");
+                }
+                else setWarningText("Cannot clear log entry until download is complete.");
             }
-
-            else setWarningText("Cannot clear log entry until download is complete.");
+            else setWarningText("Please select a download.");
         });
 
         controlPanel.add(resume);
@@ -177,7 +178,6 @@ public class DownloadWindow extends JFrame {
 
         p.add(inputFrame);
         p.add(scrollPane);
-        p.add(warning);
 
         addWindowListener(new WindowAdapter() {
             @Override

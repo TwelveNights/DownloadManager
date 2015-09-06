@@ -17,7 +17,10 @@ public class DownloadDirectory extends JButton implements SwingConstants, Action
         chooser = new JFileChooser();
         setHorizontalAlignment(SwingConstants.CENTER);
         addActionListener(this);
-        setBackground(Color.LIGHT_GRAY);
+        setOpaque(false);
+        setContentAreaFilled(false);
+        setBorderPainted(false);
+        // setBackground(Color.LIGHT_GRAY);
 
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
     }
