@@ -67,6 +67,12 @@ public class DownloadWindow extends JFrame {
         manager.setModel(model);
         manager.populateTable();
 
+        for (int i = 0; i < manager.getSize(); i++) {
+            SimpleMission mission = manager.get(i);
+            if (mission.getFile().exists())
+                mission.start();
+        }
+
         inputLayout.setHgap(5);
         fieldsLayout.setVgap(3);
         startLayout.setHgap((3));

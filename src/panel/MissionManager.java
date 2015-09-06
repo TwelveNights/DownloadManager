@@ -67,7 +67,11 @@ public class MissionManager implements Serializable {
         }
     }
 
-    public void updateProgress() {
-        model.fireTableDataChanged();
+    public int getSize() {
+        return missions.size();
+    }
+
+    public SimpleMission get(int index) {
+        return missions.get(index);
     }
 }
