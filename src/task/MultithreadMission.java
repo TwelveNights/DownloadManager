@@ -324,4 +324,3 @@ public class MultithreadMission extends Mission {
 		}
 	}
 }
->>>>>>> KuromiAK/master:Alex-main/DownloadManager/src/task/MultithreadMission.java

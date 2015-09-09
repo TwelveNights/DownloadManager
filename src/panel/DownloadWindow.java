@@ -10,11 +10,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import downloadexception.ExtensionException;
 import task.SimpleMission;
 import java.net.URLDecoder;
 
 import org.apache.commons.io.FilenameUtils;
+
+import exception.ExtensionException;
 import task.Status;
 
 public class DownloadWindow extends JFrame {

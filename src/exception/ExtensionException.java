@@ -1,4 +1,4 @@
-package downloadexception;
+package exception;
 
 public class ExtensionException extends Exception{
 
