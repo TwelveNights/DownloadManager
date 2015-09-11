@@ -61,6 +61,10 @@ public class SimpleMission extends Mission {
 			return;
 		status = Status.IN_PROGRESS;
 
+		// Starts over if file not found.
+		if (!file.exists())
+			current = 0;
+
 		t = new Thread(new SimpleTask());
 		t.start();
 	}

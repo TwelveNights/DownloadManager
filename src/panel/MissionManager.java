@@ -1,77 +1,102 @@
 package panel;
 
-import task.SimpleMission;
+import task.Mission;
 
+import java.io.IOException;
 import java.io.Serializable;
-import java.net.URL;
+import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.stream.Stream;
 
+/**
+ * Methods in this class is not thread-safe. This is true even for methods that
+ * have "safely" in their names.
+ */
 public class MissionManager implements Serializable {
 
-    private ArrayList<SimpleMission> missions;
-    private transient DownloadTableModel model;
+	private static final long serialVersionUID = -6993535597006106378L;
 
-    public MissionManager() {
-        missions = new ArrayList<>();
-    }
+	private ArrayList<Mission> missions;
 
-    public void addMission(SimpleMission mission) {
-        missions.add(mission);
-        Object[] row = {mission.getPath(), mission.getUrl(), mission.getCurrentSize() / mission.getTotalSize()};
-        model.addRow(row);
-    }
+	public MissionManager() {
+		missions = new ArrayList<Mission>();
+	}
 
-    public void addMission(int index, SimpleMission mission) {
-        missions.add(mission);
-        Object[] row = {mission.getPath(), mission.getUrl(), mission.getCurrentSize() / mission.getTotalSize()};
-        model.insertRow(index, row);
-    }
+	public boolean addMission(Mission mission) {
+		return missions.add(mission);
+	}
 
-    public void removeMission(int index, SimpleMission mission) {
-        missions.remove(mission);
-        model.removeRow(index);
-    }
+	public void addMission(int index, Mission mission) {
+		missions.add(index, mission);
+	}
 
-    public boolean contains(SimpleMission mission) {
-        return missions.contains(mission);
-    }
+	public boolean removeMission(Mission mission) {
+		return missions.remove(mission);
+	}
 
-    public SimpleMission findMissionByURL(URL url) {
-        for (SimpleMission m : missions) {
-            if (m.getUrl().toString().equals(url.toString())) {
-                return m;
-            }
-        }
-        return null;
-    }
+	public Mission removeMission(int index) {
+		return missions.remove(index);
+	}
 
-    public void stopMissions() {
-        for (SimpleMission m : missions) {
-            m.pause();
-            try {
-                m.join();
-            } catch (InterruptedException i) {
-                i.printStackTrace();
-            }
-        }
-    }
+	public boolean safelyRemoveMission(Mission mission) throws InterruptedException {
+		if (missions.remove(mission)) {
+			mission.pause();
+			mission.join();
+			return true;
+		} else
+			return false;
+	}
 
-    public void setModel(DownloadTableModel m) {
-        model = m;
-    }
+	public Mission safelyRemoveMission(int index) throws InterruptedException {
+		Mission mission = removeMission(index);
+		mission.pause();
+		mission.join();
+		return mission;
+	}
 
-    public void populateTable() {
-        for (SimpleMission m : missions) {
-            Object[] row = {m.getPath(), m.getUrl(), m.getCurrentSize() / m.getTotalSize() * 100};
-            model.addRow(row);
-        }
-    }
+	public boolean safelyAbortMission(Mission mission) throws InterruptedException, IOException {
+		if (safelyRemoveMission(mission))
+			return Files.deleteIfExists(mission.getPath());
+		else
+			return false;
+	}
 
-    public int getSize() {
-        return missions.size();
-    }
+	public Mission safelyAbortMission(int index) throws InterruptedException, IOException {
+		Mission mission = safelyRemoveMission(index);
+		Files.deleteIfExists(mission.getPath());
+		return mission;
+	}
 
-    public SimpleMission get(int index) {
-        return missions.get(index);
-    }
+	public boolean contains(Mission mission) {
+		return missions.contains(mission);
+	}
+
+	public void stopMissions() {
+		for (Mission m : missions) {
+			m.pause();
+		}
+	}
+
+	public void joinMissions() {
+		for (Mission m : missions) {
+			try {
+				m.join();
+			} catch (InterruptedException i) {
+				i.printStackTrace();
+			}
+		}
+	}
+
+	public int getSize() {
+		return missions.size();
+	}
+
+	public Mission get(int index) {
+		return missions.get(index);
+	}
+
+	public Stream<Mission> getMissionStream() {
+		return missions.stream();
+	}
+
 }
