@@ -7,7 +7,10 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.ByteBuffer;
+import java.nio.channels.AsynchronousFileChannel;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 
@@ -20,7 +23,7 @@ import java.util.ArrayList;
  * retry until explicitly paused. The resulting Files may be incomplete if the
  * server fails to report the correct file size.
  */
-public class MultithreadMission extends Mission {
+public class MultithreadMission extends AbstractMission {
 
 	private static final long serialVersionUID = -5442512424368409551L;
 
@@ -34,8 +37,7 @@ public class MultithreadMission extends Mission {
 	 *            The File to which the downloaded data is stored to.
 	 */
 	public MultithreadMission(URL url, File file) {
-		this.url = url;
-		this.file = file;
+		super(url, file);
 	}
 
 	/**
@@ -49,14 +51,13 @@ public class MultithreadMission extends Mission {
 	 *            must be included.
 	 */
 	public MultithreadMission(URL url, Path path) {
-		this.url = url;
-		this.file = path.toFile();
+		super(url, path.toFile());
 	}
 
 	/**
 	 * Number of threads a mission creates.
 	 */
-	public static int THREAD_NUMBER = 10;
+	public static int THREAD_NUMBER = 8;
 
 	/**
 	 * Size of each download segments.
@@ -72,8 +73,8 @@ public class MultithreadMission extends Mission {
 	long current = 0;
 
 	/**
-	 * A progress table that shows the progress of each segment. Each entry is
-	 * guaranteed to be accessed by at most one thread at a time.
+	 * A progress table that shows the progress of each segment. Each entry
+	 * should be accessed by at most one thread at a time.
 	 */
 	long[] progress;
 
@@ -82,6 +83,7 @@ public class MultithreadMission extends Mission {
 	 * this field must acquire the lock first.
 	 */
 	ArrayDeque<Integer> todo;
+
 	/**
 	 * Threads dedicated for this download mission. Access to this field must
 	 * acquire the lock first.
@@ -90,11 +92,21 @@ public class MultithreadMission extends Mission {
 
 	/**
 	 * Starts the download mission. Fails if the download file is bigger than
-	 * SEGMENT_LENGTH
+	 * SEGMENT_LENGTH * Integer.MAX_VALUE. If the mission is in the process of
+	 * being paused, execution will be halted until the mission comes to a
+	 * complete stop.
 	 */
 	@Override
 	synchronized public void start() {
-		interrupted = false;
+
+		if (interrupted) {
+			try {
+				this.wait();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 
 		if (status == Status.IN_PROGRESS || status == Status.FINISHED)
 			return;
@@ -107,8 +119,8 @@ public class MultithreadMission extends Mission {
 			try {
 				total = url.openConnection().getContentLengthLong();
 			} catch (IOException e) {
-				e.printStackTrace();
 				this.status = Status.FAILED;
+				e.printStackTrace();
 				return;
 			}
 
@@ -127,25 +139,26 @@ public class MultithreadMission extends Mission {
 		if (!file.exists() || file.length() != total) {
 			try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
 				raf.setLength(total);
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-				status = Status.FAILED;
-				return;
-			} catch (IOException e) {
-				e.printStackTrace();
-				status = Status.FAILED;
-				return;
-			} finally {
+				// Progress is reset once a new file is created.
 				progress = null;
 				todo = null;
 				current = 0;
+			} catch (FileNotFoundException e) {
+				status = Status.FAILED;
+				e.printStackTrace();
+				return;
+			} catch (IOException e) {
+				status = Status.FAILED;
+				e.printStackTrace();
+				return;
 			}
 		}
 
 		if (progress == null) {
 			// Calculate the number of sections needed and initialize the
 			// progress table.
-			// Type-cast fails if file is too big.
+			// Type-cast fails if file is too big, which should be prevented by
+			// a check.
 			int l = (int) ((total - 1) / SEGMENT_LENGTH + 1);
 
 			progress = new long[l];
@@ -155,60 +168,27 @@ public class MultithreadMission extends Mission {
 				todo.add(i);
 		}
 
-		// Start up threads
+		// Start threads
 		if (threads == null)
-			threads = new ArrayList<Thread>();
-		
-		populateThreads();
+			threads = new ArrayList<Thread>(Math.min(THREAD_NUMBER, progress.length));
+
+		startThreads();
 	}
 
 	/**
 	 * Allocate a new thread on a unfinished mission, adds the thread to the
 	 * thread pool.
 	 */
-	private void startThread() {
-		Thread t;
+	private void startThreads() {
+		for (int i = 0; i < threads.size(); i++) {
+			Thread t = new Thread(new WorkerTask());
 
-		synchronized (threads) {
-			synchronized (todo) {
-				t = new Thread(new SegmentTask(todo.pop()));
+			synchronized (threads) {
+				threads.add(t);
 			}
-			threads.add(t);
+
+			t.start();
 		}
-
-		t.start();
-	}
-
-	/**
-	 * Populate threads to THREAD_NUMBER, also checks whether the mission is
-	 * PAUSED or FINISHED.
-	 * 
-	 * @see Status
-	 */
-	private void populateThreads() {
-		synchronized (threads) {
-			if (threads.isEmpty()) {
-				// Check for FINISHED
-				synchronized (todo) {
-					if (todo.isEmpty()) {
-						status = Status.FINISHED;
-						threads.notify();
-						return;
-					}
-				}
-
-				// Check for PAUSED
-				if (interrupted) {
-					status = Status.PAUSED;
-					threads.notify();
-					return;
-				}
-			}
-		}
-
-		// Populate threads
-		while (threads.size() < THREAD_NUMBER && !todo.isEmpty() && !interrupted)
-			startThread();
 	}
 
 	/**
@@ -217,7 +197,7 @@ public class MultithreadMission extends Mission {
 	 * this mission is safely stopped.
 	 */
 	@Override
-	public void pause() {
+	synchronized public void pause() {
 		interrupted = true;
 	}
 
@@ -225,11 +205,9 @@ public class MultithreadMission extends Mission {
 	/**
 	 * Waits for all threads dedicated for this mission to die.
 	 */
-	public void join() throws InterruptedException {
-		synchronized (threads) {
-			if (status == Status.IN_PROGRESS)
-				threads.wait();
-		}
+	synchronized public void join() throws InterruptedException {
+		if (status == Status.IN_PROGRESS)
+			this.wait();
 	}
 
 	/**
@@ -250,16 +228,24 @@ public class MultithreadMission extends Mission {
 		return current;
 	}
 
-	private class SegmentTask implements Runnable {
-
-		int segmentNumber;
-
-		private SegmentTask(int i) {
-			segmentNumber = i;
-		}
+	private class WorkerTask implements Runnable {
 
 		@Override
 		public void run() {
+			while (!interrupted) {
+				// Atomically pop a value, then execute on it.
+				int i;
+				synchronized (todo) {
+					if (todo.isEmpty())
+						break;
+					i = todo.pop();
+				}
+				download(i);
+			}
+			terminate();
+		}
+
+		private void download(int segmentNumber) {
 
 			try {
 				URLConnection conn = url.openConnection();
@@ -269,58 +255,75 @@ public class MultithreadMission extends Mission {
 				long end = offset + SEGMENT_LENGTH - 1;
 				conn.setRequestProperty("Range", "Bytes=" + start + "-" + end);
 
-				try (InputStream in = conn.getInputStream(); RandomAccessFile raf = new RandomAccessFile(file, "rw");) {
+				try (InputStream in = conn.getInputStream();
+						AsynchronousFileChannel out = AsynchronousFileChannel.open(file.toPath(),
+								StandardOpenOption.WRITE);) {
 
-					byte[] buf = new byte[8 * 1024];
-					int len;
+					while (!interrupted) {
+						byte[] buf = new byte[8 * 1024];
+						int len = in.read(buf);
 
-					while ((len = in.read(buf)) != -1) {
-						synchronized (file) {
-							raf.seek(start);
-							raf.write(buf, 0, len);
-						}
+						if (len == -1)
+							// Skip the rest if segment finished
+							return;
 
+						out.write(ByteBuffer.wrap(buf, 0, len), start);
 						start += len;
 						progress[segmentNumber] += len;
-						updateProgress(len);
-
-						if (interrupted) {
-							onInterrupt();
-							return;
+						synchronized (progress) {
+							current += len;
 						}
 					}
 
-					threads.remove(Thread.currentThread());
-					populateThreads();
+					/*
+					 * byte[] buf = new byte[8 * 1024]; int len;
+					 * 
+					 * while ((len = in.read(buf)) != -1) {
+					 * out.write(ByteBuffer.wrap(buf, 0, len), start);
+					 * 
+					 * start += len; progress[segmentNumber] += len;
+					 * synchronized (progress) { current += len; }
+					 * 
+					 * if (interrupted) { onInterrupt(); return; } }
+					 */
 
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-					onInterrupt();
-				} catch (IOException e) {
-					e.printStackTrace();
-					onInterrupt();
 				}
 
-			} catch (IOException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
-				onInterrupt();
 			}
-		}
 
-		synchronized private void updateProgress(int n) {
-			current += n;
-		}
-
-		private void onInterrupt() {
+			// Put # back if method is interrupted abruptly
 			synchronized (todo) {
 				todo.add(segmentNumber);
 			}
 
-			synchronized (threads) {
-				threads.remove(Thread.currentThread());
-			}
-
-			populateThreads();
 		}
+
+		private void terminate() {
+			synchronized (threads) {
+				// Remove this thread
+				threads.remove(Thread.currentThread());
+
+				if (threads.isEmpty()) {
+					synchronized (MultithreadMission.this) {
+						// Change status
+						synchronized (todo) {
+							if (todo.isEmpty()) {
+								status = Status.FINISHED;
+							} else {
+								status = Status.PAUSED;
+							}
+						}
+						
+						// Unblock threads joining this mission
+						interrupted = false;
+						MultithreadMission.this.notifyAll();
+					}
+				}
+			}
+		}
+
 	}
+
 }

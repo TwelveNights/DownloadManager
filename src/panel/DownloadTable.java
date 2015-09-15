@@ -20,7 +20,7 @@ public class DownloadTable extends JTable {
 
 		// Updates selectedMission upon select
 		selectionModel.addListSelectionListener(e -> {
-			
+
 			DownloadTable table = DownloadTable.this;
 			int row = table.getSelectedRow();
 			selectedMission = (row == -1) ? null : manager.get(table.convertRowIndexToModel(row));

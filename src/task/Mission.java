@@ -1,117 +1,29 @@
 package task;
 
 import java.io.File;
-import java.io.Serializable;
 import java.net.URL;
 import java.nio.file.Path;
 
-/**
- * Mission is the abstract base class for all download missions that involve
- * creating one or more threads in the process.
- */
-public abstract class Mission implements Serializable {
+public interface Mission {
 
-	private static final long serialVersionUID = -6372000897518949968L;
+	public void start();
 
-	/**
-	 * The URL from which this mission downloads a file.
-	 */
-	URL url;
-	/**
-	 * The File where downloaded data is stored.
-	 */
-	File file;
+	public void pause();
 
-	/**
-	 * The status of this mission.
-	 */
-	Status status = Status.NOT_STARTED;
+	public void join() throws InterruptedException;
 
-	/**
-	 * Starts the download mission.
-	 */
-	public abstract void start();
+	public URL getUrl();
 
-	/**
-	 * Stops the active thread(s). Note that said thread is not immediately
-	 * stopped. getStatus() or join() must be called to ensure that said thread
-	 * is safely stopped.
-	 */
-	public abstract void pause();
+	public File getFile();
 
-	/**
-	 * Waits for all thread(s) dedicated for this mission to die.
-	 * 
-	 * @throws InterruptedException
-	 *             if any thread has interrupted the current thread. The
-	 *             interrupted status of the current thread is cleared when this
-	 *             exception is thrown.
-	 */
-	public abstract void join() throws InterruptedException;
-
-	/**
-	 * @return The URL from which this mission downloads a file.
-	 */
-	public URL getUrl() {
-		return url;
+	default public Path getPath() {
+		return getFile().toPath();
 	}
 
-	/**
-	 * @return The File where downloaded data is stored.
-	 */
-	public File getFile() {
-		return file;
-	}
+	public long getTotalSize();
 
-	/**
-	 * @return The path of the downloaded file.
-	 */
-	public Path getPath() {
-		return file.toPath();
-	}
+	public long getCurrentSize();
 
-	/**
-	 * @return the full size of the file to be downloaded.
-	 */
-	abstract public long getTotalSize();
-
-	/**
-	 * @return the size of part of the file downloaded.
-	 */
-	abstract public long getCurrentSize();
-
-	/**
-	 * @return current status of the mission.
-	 */
-	public final Status getStatus() {
-		return status;
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((file == null) ? 0 : file.hashCode());
-		result = prime * result + ((url == null) ? 0 : url.hashCode());
-		return result;
-	}
-
-	/**
-	 * Comparison uses equals() method of File and URL.
-	 * 
-	 * @see File#equals(Object)
-	 * @see URL#equals(Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj instanceof Mission) {
-			Mission other = (Mission) obj;
-			return ((file == null) ? (other.file == null) : file.equals(other.file))
-					&& ((url == null) ? (other.url == null) : url.equals(other.url));
-		}
-		return false;
-	}
+	public Status getStatus();
 
 }

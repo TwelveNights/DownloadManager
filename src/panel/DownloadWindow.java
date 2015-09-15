@@ -8,13 +8,13 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import task.Mission;
 import task.SimpleMission;
 import java.net.URLDecoder;
 
 import org.apache.commons.io.FilenameUtils;
 
 import task.Status;
+import task.Mission;
 
 public class DownloadWindow extends JFrame {
 
@@ -177,7 +177,7 @@ public class DownloadWindow extends JFrame {
 				e.getWindow().dispose();
 			}
 		});
-		
+
 		add(panel);
 		setVisible(true);
 	}
@@ -206,8 +206,6 @@ public class DownloadWindow extends JFrame {
 			setWarningText("Please enter a properly formatted URL for the file.");
 		} catch (UnsupportedEncodingException a) {
 			a.printStackTrace();
-		} catch (IOException io) {
-			io.printStackTrace();
 		}
 	}
 }

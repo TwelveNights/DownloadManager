@@ -8,12 +8,13 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Path;
+import java.util.function.Consumer;
 
 /**
  * SimpleMission is a class representing a download mission utilizing one Thread
  * to obtain data from an HTTP server and then writes it down to a given file.
  */
-public class SimpleMission extends Mission {
+public class SimpleMission extends AbstractMission {
 
 	private static final long serialVersionUID = 5113449782029278939L;
 
@@ -26,8 +27,7 @@ public class SimpleMission extends Mission {
 	 *            The File to which the downloaded data is stored to.
 	 */
 	public SimpleMission(URL url, File file) {
-		this.url = url;
-		this.file = file;
+		super(url, file);
 	}
 
 	/**
@@ -40,8 +40,7 @@ public class SimpleMission extends Mission {
 	 *            must be included.
 	 */
 	public SimpleMission(URL url, Path path) {
-		this.url = url;
-		this.file = path.toFile();
+		super(url, path.toFile());
 	}
 
 	long current = 0;
@@ -53,7 +52,13 @@ public class SimpleMission extends Mission {
 	transient Thread t;
 
 	/**
-	 * Starts the download mission by creating a new thread and activates it.
+	 * A Consumer that handles FileNotFoundException and IOException.
+	 */
+	Consumer<Exception> exceptionHandler = (Exception e) -> e.printStackTrace();
+
+	/**
+	 * Starts the download mission by creating a new thread and activates it. Do
+	 * nothing if the mission is already started or finished.
 	 */
 	@Override
 	synchronized public void start() {
@@ -70,10 +75,9 @@ public class SimpleMission extends Mission {
 	}
 
 	/**
-	 * Stops the active thread. Do nothing if no thread is active or said thread
-	 * is not initialized. Note that said thread is not immediately stopped.
-	 * getStatus() or join() must be called to ensure that said thread is safely
-	 * stopped.
+	 * Stops the active thread. Do nothing if no thread is active. Note that
+	 * said thread is not immediately stopped. getStatus() or join() must be
+	 * called to ensure that said thread is safely stopped.
 	 */
 	@Override
 	public void pause() {
@@ -90,7 +94,7 @@ public class SimpleMission extends Mission {
 	 *             exception is thrown.
 	 */
 	@Override
-	public void join() throws InterruptedException {
+	synchronized public void join() throws InterruptedException {
 		if (status == Status.IN_PROGRESS && t != null)
 			t.join();
 	}
@@ -108,6 +112,21 @@ public class SimpleMission extends Mission {
 	@Override
 	public long getCurrentSize() {
 		return current;
+	}
+
+	/**
+	 * Defines the behavior the mission handles exception in a seperate thread.
+	 * 
+	 * @param handler
+	 *            The function responsible for exception handling.
+	 *            FileNotFoundException and IOException are to be expected. Use
+	 *            Thread.currentThread() to refer to the running thread.
+	 * @see FileNotFoundException
+	 * @see IOException
+	 * @see Thread#currentThread()
+	 */
+	public void setUncaughtExceptionHandler(Consumer<Exception> handler) {
+		this.exceptionHandler = handler;
 	}
 
 	private class SimpleTask implements Runnable {
@@ -139,20 +158,17 @@ public class SimpleMission extends Mission {
 					}
 
 					status = Status.FINISHED;
-
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-					status = Status.FAILED;
-				} catch (IOException e) {
-					e.printStackTrace();
-					status = Status.FAILED;
 				}
 
-			} catch (IOException e) {
-				e.printStackTrace();
+			} catch (Exception e) {
 				status = Status.FAILED;
+				handleException(e);
 			}
 
+		}
+
+		void handleException(Exception e) {
+			exceptionHandler.accept(e);
 		}
 
 	}
