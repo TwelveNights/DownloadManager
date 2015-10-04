@@ -52,11 +52,6 @@ public class SimpleMission extends AbstractMission {
 	transient Thread t;
 
 	/**
-	 * A Consumer that handles FileNotFoundException and IOException.
-	 */
-	Consumer<Exception> exceptionHandler = (Exception e) -> e.printStackTrace();
-
-	/**
 	 * Starts the download mission by creating a new thread and activates it. Do
 	 * nothing if the mission is already started or finished.
 	 */
@@ -114,21 +109,6 @@ public class SimpleMission extends AbstractMission {
 		return current;
 	}
 
-	/**
-	 * Defines the behavior the mission handles exception in a seperate thread.
-	 * 
-	 * @param handler
-	 *            The function responsible for exception handling.
-	 *            FileNotFoundException and IOException are to be expected. Use
-	 *            Thread.currentThread() to refer to the running thread.
-	 * @see FileNotFoundException
-	 * @see IOException
-	 * @see Thread#currentThread()
-	 */
-	public void setUncaughtExceptionHandler(Consumer<Exception> handler) {
-		this.exceptionHandler = handler;
-	}
-
 	private class SimpleTask implements Runnable {
 
 		@Override
@@ -158,17 +138,14 @@ public class SimpleMission extends AbstractMission {
 					}
 
 					status = Status.FINISHED;
+					completionHandler.accept(SimpleMission.this);
 				}
 
 			} catch (Exception e) {
 				status = Status.FAILED;
-				handleException(e);
+				uncaughtExceptionHandler.accept(SimpleMission.this, e);
 			}
 
-		}
-
-		void handleException(Exception e) {
-			exceptionHandler.accept(e);
 		}
 
 	}

@@ -170,7 +170,7 @@ public class MultithreadMission extends AbstractMission {
 
 		// Start threads
 		if (threads == null)
-			threads = new ArrayList<Thread>(Math.min(THREAD_NUMBER, progress.length));
+			threads = new ArrayList<Thread>(THREAD_NUMBER);
 
 		startThreads();
 	}
@@ -180,7 +180,7 @@ public class MultithreadMission extends AbstractMission {
 	 * thread pool.
 	 */
 	private void startThreads() {
-		for (int i = 0; i < threads.size(); i++) {
+		for (int i = 0; i < THREAD_NUMBER; i++) {
 			Thread t = new Thread(new WorkerTask());
 
 			synchronized (threads) {
@@ -275,22 +275,10 @@ public class MultithreadMission extends AbstractMission {
 						}
 					}
 
-					/*
-					 * byte[] buf = new byte[8 * 1024]; int len;
-					 * 
-					 * while ((len = in.read(buf)) != -1) {
-					 * out.write(ByteBuffer.wrap(buf, 0, len), start);
-					 * 
-					 * start += len; progress[segmentNumber] += len;
-					 * synchronized (progress) { current += len; }
-					 * 
-					 * if (interrupted) { onInterrupt(); return; } }
-					 */
-
 				}
 
 			} catch (Exception e) {
-				e.printStackTrace();
+				uncaughtExceptionHandler.accept(MultithreadMission.this, e);
 			}
 
 			// Put # back if method is interrupted abruptly
@@ -315,7 +303,8 @@ public class MultithreadMission extends AbstractMission {
 								status = Status.PAUSED;
 							}
 						}
-						
+
+						completionHandler.accept(MultithreadMission.this);
 						// Unblock threads joining this mission
 						interrupted = false;
 						MultithreadMission.this.notifyAll();

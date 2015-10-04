@@ -10,20 +10,20 @@ public class ExtendedMission implements Serializable, Mission {
 
 	private static final long serialVersionUID = 8554493008724213049L;
 
-	MaskableMission mission;
+	AbstractMission mission;
 	File unmaskedFile;
 	String extension;
 
-	public ExtendedMission(MaskableMission mission, String extension) throws IncorrectMissionStateException {
+	public ExtendedMission(AbstractMission mission, String extension) {
 		if (mission.getStatus() != Status.NOT_STARTED)
 			throw new IncorrectMissionStateException("Mission is already started");
 
 		this.mission = mission;
 		this.extension = extension;
 
-		// TODO add extension to mission
 		unmaskedFile = mission.getFile();
 		mission.setFile(new File(unmaskedFile.getParentFile(), unmaskedFile.getName() + extension));
+		mission.addCompletionHandler((AbstractMission m) -> unmask());
 	}
 
 	@Override
@@ -71,10 +71,8 @@ public class ExtendedMission implements Serializable, Mission {
 	}
 
 	public void unmask() {
-		if (mission.getStatus() != Status.FINISHED)
-			throw new IncorrectMissionStateException("Mission is not finished");
-		
-		mission.getFile().renameTo(unmaskedFile);
+		if (mission.getStatus() == Status.FINISHED)
+			mission.getFile().renameTo(unmaskedFile);
 	}
 
 	@Override

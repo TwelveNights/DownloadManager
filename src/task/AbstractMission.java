@@ -1,9 +1,13 @@
 package task;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.Serializable;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import exception.IncorrectMissionStateException;
 
@@ -11,7 +15,7 @@ import exception.IncorrectMissionStateException;
  * Mission is the abstract base class for all download missions that involve
  * creating one or more threads in the process.
  */
-public abstract class AbstractMission implements Mission, MaskableMission, Serializable {
+public abstract class AbstractMission implements Mission, Serializable {
 
 	private static final long serialVersionUID = -6372000897518949968L;
 
@@ -24,6 +28,7 @@ public abstract class AbstractMission implements Mission, MaskableMission, Seria
 	 * The URL from which this mission downloads a file.
 	 */
 	URL url;
+
 	/**
 	 * The File where downloaded data is stored.
 	 */
@@ -33,6 +38,35 @@ public abstract class AbstractMission implements Mission, MaskableMission, Seria
 	 * The status of this mission.
 	 */
 	Status status = Status.NOT_STARTED;
+
+	BiConsumer<AbstractMission, Exception> uncaughtExceptionHandler = 
+			(AbstractMission m, Exception e) -> e.printStackTrace();
+	Consumer<AbstractMission> completionHandler = (AbstractMission m) -> {};
+
+	/**
+	 * Defines the behavior the mission handles exception in a seperate thread.
+	 * 
+	 * @param handler
+	 *            The function responsible for exception handling.
+	 *            FileNotFoundException and IOException are to be expected. Use
+	 *            Thread.currentThread() to refer to the running thread.
+	 * @see FileNotFoundException
+	 * @see IOException
+	 * @see Thread#currentThread()
+	 */
+	public void addUncaughtExceptionHandler(BiConsumer<AbstractMission, Exception> handler) {
+		this.uncaughtExceptionHandler = uncaughtExceptionHandler.andThen(handler);
+	}
+
+	/**
+	 * Defines what to do when the mission finishes.
+	 * 
+	 * @param handler
+	 *            The function that is called when the mission finishes.
+	 */
+	public void addCompletionHandler(Consumer<AbstractMission> handler) {
+		this.completionHandler = completionHandler.andThen(handler);
+	}
 
 	/**
 	 * Starts the download mission.
@@ -63,8 +97,8 @@ public abstract class AbstractMission implements Mission, MaskableMission, Seria
 		return url;
 	}
 
-	public void setUrl(URL url) {
-		if (status != Status.NOT_STARTED)
+	public synchronized void setUrl(URL url) {
+		if (status != Status.NOT_STARTED && status != Status.FINISHED)
 			throw new IncorrectMissionStateException("Given mission is already started");
 		this.url = url;
 	}
@@ -76,8 +110,8 @@ public abstract class AbstractMission implements Mission, MaskableMission, Seria
 		return file;
 	}
 
-	public void setFile(File file) {
-		if (status != Status.NOT_STARTED)
+	public synchronized void setFile(File file) {
+		if (status != Status.NOT_STARTED && status != Status.FINISHED)
 			throw new IncorrectMissionStateException("Given mission is already started");
 		this.file = file;
 	}
@@ -125,8 +159,8 @@ public abstract class AbstractMission implements Mission, MaskableMission, Seria
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;
-		if (obj instanceof Mission) {
-			Mission other = (Mission) obj;
+		if (obj instanceof AbstractMission) {
+			AbstractMission other = (AbstractMission) obj;
 			return ((file == null) ? (other.getFile() == null) : file.equals(other.getFile()));
 		}
 		return false;

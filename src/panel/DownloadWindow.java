@@ -94,7 +94,14 @@ public class DownloadWindow extends JFrame {
 		fields.add(directory, BorderLayout.CENTER);
 		fields.add(warning, BorderLayout.SOUTH);
 
-		start.addActionListener((ActionEvent a) -> startDownload());
+		start.addActionListener((ActionEvent a) -> {
+			NewMissionDialog dialog = new NewMissionDialog(DownloadWindow.this);
+			Mission m = dialog.get();
+			if (m != null) {
+				manager.addMission(m);
+				m.start();
+			}
+		});
 
 		action.addActionListener((ActionEvent a) -> {
 			// TODO
@@ -163,7 +170,11 @@ public class DownloadWindow extends JFrame {
 				manager.stopMissions();
 
 				File file = new File("res/downloads.ser");
-				file.mkdirs();
+				try {
+					file.createNewFile();
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
 
 				manager.joinMissions();
 
@@ -188,14 +199,15 @@ public class DownloadWindow extends JFrame {
 
 	private void startDownload() {
 		try {
-			Path path;
+			File file;
+			URL url;
 			String link = http.getText();
-			URL url = new URL(link);
+			url = new URL(link);
 			// TODO add an arbitrary extension
-			String fileName = "\\" + FilenameUtils.getName(url.getFile());
+			String fileName = FilenameUtils.getName(url.getFile());
 
-			path = Paths.get(directory.getDirectory() + URLDecoder.decode(fileName, "UTF-8"));
-			SimpleMission mission = new SimpleMission(url, path);
+			file = new File(Paths.get(directory.getDirectory()).toFile() + URLDecoder.decode(fileName, "UTF-8"));
+			SimpleMission mission = new SimpleMission(url, file);
 			if (manager.contains(mission)) {
 				setWarningText("Mission is already in-progress/complete.");
 				return;
