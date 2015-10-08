@@ -5,16 +5,14 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.SwingConstants;
 import javax.swing.JFileChooser;
-import java.awt.Color;
 
 public class DownloadDirectory extends JButton implements SwingConstants, ActionListener {
 
     private JFileChooser chooser;
-    private String directory = System.getProperty("user.dir").toString();
+    private String directory = System.getProperty("user.dir");
 
     public DownloadDirectory() {
-        super("...");
-        chooser = new JFileChooser();
+        super(System.getProperty("user.dir"));
         setHorizontalAlignment(SwingConstants.CENTER);
         addActionListener(this);
         setOpaque(false);
@@ -22,6 +20,7 @@ public class DownloadDirectory extends JButton implements SwingConstants, Action
         setBorderPainted(false);
         // setBackground(Color.LIGHT_GRAY);
 
+        chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
     }
 

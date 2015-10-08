@@ -2,42 +2,43 @@ package panel;
 
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import java.awt.event.MouseEvent;
-import java.net.MalformedURLException;
-import java.net.URL;
+import task.Mission;
 
 public class DownloadTable extends JTable {
 
-    private DownloadTableModel model;
+	MissionManager manager;
+	Mission selectedMission;
 
-    public DownloadTable(DownloadTableModel dtm) {
-        super(dtm);
-        model = dtm;
-        showHorizontalLines = false;
-        setAutoCreateRowSorter(true);
-        getTableHeader().setReorderingAllowed(false);
-        // getTableHeader().setResizingAllowed(false);
-        setCellSelectionEnabled(true);
-        setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-    }
+	public DownloadTable(MissionManager manager) {
+		super(new DownloadTableModel(manager));
+		showHorizontalLines = true;
+		setAutoCreateRowSorter(true);
+		getTableHeader().setReorderingAllowed(false);
+		// getTableHeader().setResizingAllowed(false);
+		setCellSelectionEnabled(true);
+		setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-    @Override
-    public String getToolTipText(MouseEvent e) {
-        int row = rowAtPoint(e.getPoint());
-        int column = columnAtPoint(e.getPoint());
+		// Updates selectedMission upon select
+		selectionModel.addListSelectionListener(e -> {
 
-        Object value = getValueAt(row, column);
-        return value == null ? null : value.toString();
-    }
+			DownloadTable table = DownloadTable.this;
+			int row = table.getSelectedRow();
+			selectedMission = (row == -1) ? null : manager.get(table.convertRowIndexToModel(row));
+		});
+	}
 
-    public URL getRowURL(int row) {
-        try {
-            return new URL(model.getValueAt(row, 1).toString());
-        }
-        catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
+	public Mission getSelectedMission() {
+		return selectedMission;
+	}
 
-        return null;
-    }
+	/*
+	 * @Override public String getToolTipText(MouseEvent e) { int row =
+	 * rowAtPoint(e.getPoint()); int column = columnAtPoint(e.getPoint());
+	 * 
+	 * Object value = getValueAt(row, column); return value == null ? null :
+	 * value.toString(); }
+	 * 
+	 * public Mission getSelectedMission() { return selectedMission; }
+	 */
+
 }
